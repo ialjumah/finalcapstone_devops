@@ -1,0 +1,140 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2.1
+jobs:
+    lint-app-code:
+        docker:
+        # Use the same Docker base as the project
+            - image: python:3.7.3-stretch
+        
+        working_directory: ~/app
+        
+        steps:
+            - checkout
+        
+        # Download and cache dependencies
+            - restore_cache:
+                keys:
+                    - v1-dependencies-{{ checksum "requirements.txt" }}
+                    # fallback to using the latest cache if no exact match is found
+                    - v1-dependencies-
+        
+            - run:
+                name: install dependencies
+                command: |
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    make install
+                # Install hadolint
+                # wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+                # chmod +x /bin/hadolint
+                
+            - save_cache:
+                paths:
+                    - ./venv
+                key: v1-dependencies-{{ checksum "requirements.txt" }}
+            
+            # run lint!
+            - run:
+                name: run lint
+                command: |
+                    make lint 
+
+            # - run:
+            #     name: push docker image to online repo
+            #     command: |
+            #         make lint
+
+
+    build-docker-image:
+        machine:
+        # Use the same Docker base as the project
+            image: ubuntu-2004:202010-01
+        steps:
+            - checkout
+
+            - run:
+                name: docker-build
+                command: |
+                    docker build --tag=final-app .
+                    docker image ls
+            - run:
+                name: docker-push
+                command: |
+                    dockerpath=blaxmyth/final
+
+                    # Step 2:  
+                    # Authenticate & tag
+                    echo "Docker ID and Image: $dockerpath"
+                    docker login -u blaxmyth -p K@!zen1911
+                    docker tag final-app $dockerpath
+                    
+
+                    # Step 3:
+                    # Push image to a docker repository
+                    docker push $dockerpath
+                    # docker tag final-app:latest public.ecr.aws/s2x7t7x9/final-app:latest
+                    # docker push public.ecr.aws/s2x7t7x9/final-app:latest
+    
+    deploy-kube-cluster:
+        machine:
+        # Use the same Docker base as the project
+            image: ubuntu-2004:202010-01
+        steps:
+            - checkout
+
+            # - run:
+            #     name: pull docker image
+            #     command: |
+            #         docker pull blaxmyth/final:latest
+            #         docker images
+
+            - run:
+                name: install dependencies
+                command: |
+                
+                    #Configure AWS CLI
+                    # curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    # unzip awscliv2.zip
+                    # sudo ./aws/install
+                    # sudo mv ./aws /usr/local/bin
+                    aws --version
+                    aws configure set aws_access_key_id ${AWS_ACCESS_KEY}
+                    aws configure set aws_secret_access_key ${AWS_SECRET_KEY}
+                    aws configure set region us-east-1
+                    aws sts get-caller-identity
+
+                    #Install eksctl for AWS EKS creation
+                    curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                    sudo mv /tmp/eksctl /usr/local/bin
+                    eksctl version
+
+                    #Install kubectl for kubernetes management
+                    curl --silent -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+                    chmod +x ./kubectl
+                    sudo mv ./kubectl /usr/local/bin
+
+            - run:
+                name: deploy kubernetes cluster
+                command: |
+                    eksctl create cluster -f eksctl.yml
+                    kubectl version
+                    kubectl get svc
+                    kubectl get nodes
+                    # kubectl create deployment final-app-deployment --image=blaxmyth/final:latest
+                    kubectl run final-app-deployment --image=blaxmyth/final:latest --requests=cpu=500m --expose --port=80
+                    kubectl get deployments
+                    kubectl get pods
+                    # kubectl expose deployment final-app-deployment --type=LoadBalancer --name=YOUR_EXTERNAL_ENDPOINT_NAME
+                    
+workflows:
+  default:
+    jobs:
+      - lint-app-code
+      - build-docker-image:
+            requires: [lint-app-code]
+      - deploy-kube-cluster:
+            requires: [build-docker-image]
+            
