@@ -6,6 +6,6 @@
 
 #deploy aws aks with eksctl
 
-eksctl create cluster --name blaxmythbot
+eksctl create cluster --name udacitycapstone_ibrahim
 
 kubectl get nodes
