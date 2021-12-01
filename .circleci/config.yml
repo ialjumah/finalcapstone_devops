@@ -68,7 +68,7 @@ jobs:
                     # Step 2:  
                     # Authenticate & tag
                     echo "Docker ID and Image: $dockerpath"
-                    docker login -u ibdiko -p falcons89ibdi
+                    docker login -u ibdiko -p falcons89
                     docker tag final-app $dockerpath
                     
 
