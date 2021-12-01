@@ -63,12 +63,12 @@ jobs:
             - run:
                 name: docker-push
                 command: |
-                    dockerpath=blaxmyth/final
+                    dockerpath=ibdiko/final
 
                     # Step 2:  
                     # Authenticate & tag
                     echo "Docker ID and Image: $dockerpath"
-                    docker login -u blaxmyth -p K@!zen1911
+                    docker login -u ibdiko -p falcons89ibdi
                     docker tag final-app $dockerpath
                     
 
@@ -88,7 +88,7 @@ jobs:
             # - run:
             #     name: pull docker image
             #     command: |
-            #         docker pull blaxmyth/final:latest
+            #         docker pull ibdiko/final:latest
             #         docker images
 
             - run:
@@ -112,7 +112,7 @@ jobs:
                     eksctl version
 
                     #Install kubectl for kubernetes management
-                    curl --silent -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+                    curl --silent -o kubectl https://amazon-eks.s3.us-west-1.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
                     chmod +x ./kubectl
                     sudo mv ./kubectl /usr/local/bin
 
@@ -123,8 +123,8 @@ jobs:
                     kubectl version
                     kubectl get svc
                     kubectl get nodes
-                    # kubectl create deployment final-app-deployment --image=blaxmyth/final:latest
-                    kubectl run final-app-deployment --image=blaxmyth/final:latest --requests=cpu=500m --expose --port=80
+                    # kubectl create deployment final-app-deployment --image=udacitycapstone_ibrahim/final:latest
+                    kubectl run final-app-deployment --image=udacitycapstone_ibrahim/final:latest --requests=cpu=500m --expose --port=80
                     kubectl get deployments
                     kubectl get pods
                     # kubectl expose deployment final-app-deployment --type=LoadBalancer --name=YOUR_EXTERNAL_ENDPOINT_NAME
