@@ -127,6 +127,7 @@ jobs:
                     kubectl run final-app-deployment --image=udacitycapstone_ibrahim/final:latest --requests=cpu=500m --expose --port=80
                     kubectl get deployments
                     kubectl get pods
+                    #pods
                     # kubectl expose deployment final-app-deployment --type=LoadBalancer --name=YOUR_EXTERNAL_ENDPOINT_NAME
                     
 workflows:
